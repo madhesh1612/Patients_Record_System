@@ -1,0 +1,16 @@
+.login-container{display:flex;gap:2rem;padding:2rem;font-family:Arial,Helvetica,sans-serif}
+.login-box{flex:1;max-width:600px;background:#fff;padding:1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.05)}
+.login-header h1{margin:0;font-size:1.25rem}
+.subtitle{color:#666;margin-top:.25rem}
+.alert{padding:.5rem 1rem;border-radius:4px;margin:.5rem 0}
+.alert-error{background:#fdecea;color:#611a15}
+.alert-success{background:#edf7ed;color:#0a5f2e}
+.login-form .form-group{margin:0.75rem 0}
+.login-form label{display:block;margin-bottom:.25rem;font-weight:600}
+.login-form input,input[type='email'],input[type='tel'],select{width:100%;padding:.5rem;border:1px solid #ddd;border-radius:4px}
+.btn{display:inline-block;padding:.6rem 1rem;border-radius:6px;border:none;cursor:pointer}
+.btn-primary{background:#2b6cb0;color:#fff}
+.login-toggle{margin-top:1rem}
+.toggle-btn{margin-left:.5rem;background:none;border:none;color:#2b6cb0;cursor:pointer}
+.login-info{width:300px}
+.demo-box{background:#f7fafc;padding:.75rem;border-radius:6px;margin-bottom:.5rem}

@@ -1,0 +1,36 @@
+{
+  "name": "patient-record-management-backend",
+  "version": "1.0.0",
+  "description": "Patient Record Management System Backend API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "db:init": "psql -U postgres -d postgres -f sql/schema.sql",
+    "seed": "node src/seed.js"
+  },
+  "keywords": [
+    "healthcare",
+    "patient",
+    "records",
+    "management",
+    "api",
+    "express"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.11.3",
+    "sqlite3": "^5.1.7",
+    "twilio": "^4.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
