@@ -102,6 +102,23 @@ function initializeTables() {
         FOREIGN KEY(patient_id) REFERENCES users(id)
       )
     `);
+
+    // Doctor Notes table
+    db.run(`
+      CREATE TABLE IF NOT EXISTS doctor_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_user_id INTEGER NOT NULL,
+        provider_user_id INTEGER NOT NULL,
+        note TEXT NOT NULL,
+        appointment_date DATETIME,
+        reminder BOOLEAN DEFAULT 0,
+        reminder_sent BOOLEAN DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(patient_user_id) REFERENCES users(id),
+        FOREIGN KEY(provider_user_id) REFERENCES users(id)
+      )
+    `);
   });
 }
 

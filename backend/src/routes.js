@@ -14,16 +14,25 @@ const path = require('path');
 /**
  * POST /auth/register
  * Register a new user (patient or clinician)
+ * Body: { name, username, email, password, role, phone_number }
  */
 router.post('/auth/register', async (req, res) => {
   try {
-    const { username, email, password, role, phone_number } = req.body;
+    const { name, username, email, password, role, phone_number } = req.body;
 
     // Validate input
-    if (!username || !email || !password || !role) {
+    if (!name || !username || !email || !password || !role) {
       return res
         .status(400)
-        .json({ error: 'Missing required fields: username, email, password, role' });
+        .json({ error: 'Missing required fields: name, username, email, password, role' });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ error: 'Invalid email format' });
     }
 
     if (!['patient', 'clinician'].includes(role)) {
@@ -32,16 +41,28 @@ router.post('/auth/register', async (req, res) => {
         .json({ error: 'Role must be either "patient" or "clinician"' });
     }
 
-    // Check if user already exists
-    const existingUser = await db.getOne(
-      'SELECT id FROM users WHERE username = $1 OR email = $2',
-      [username, email]
+    // Check if username already exists
+    const existingUsername = await db.getOne(
+      'SELECT id FROM users WHERE username = $1',
+      [username]
     );
 
-    if (existingUser) {
+    if (existingUsername) {
       return res
         .status(409)
-        .json({ error: 'Username or email already exists' });
+        .json({ error: 'Username already exists' });
+    }
+
+    // Check if email already exists
+    const existingEmail = await db.getOne(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (existingEmail) {
+      return res
+        .status(409)
+        .json({ error: 'Email already registered' });
     }
 
     // Hash password
@@ -64,11 +85,17 @@ router.post('/auth/register', async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      user,
+      user: { ...user, name },
       token,
     });
   } catch (error) {
     console.error('Register error:', error);
+    // Handle unique constraint violations (SQLite or Postgres)
+    if (error.code === 'SQLITE_CONSTRAINT' || error.code === '23505') {
+      return res
+        .status(409)
+        .json({ error: 'Username or email already exists' });
+    }
     // If DB is not reachable, surface a clearer message to the client
     if (error && (error.code === 'ECONNREFUSED' || error?.errors?.some?.(e => e.code === 'ECONNREFUSED'))) {
       return res.status(503).json({ error: 'Database unreachable. Please ensure Postgres is running and configured in backend/.env' });
@@ -132,6 +159,97 @@ router.post('/auth/login', async (req, res) => {
     console.error('Login error:', error);
     if (error && (error.code === 'ECONNREFUSED' || error?.errors?.some?.(e => e.code === 'ECONNREFUSED'))) {
       return res.status(503).json({ error: 'Database unreachable. Please ensure Postgres is running and configured in backend/.env' });
+    }
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * POST /auth/google
+ * Google OAuth login/registration
+ */
+router.post('/auth/google', async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ error: 'Google credential required' });
+    }
+
+    // Verify and decode the Google ID token
+    const { OAuth2Client } = require('google-auth-library');
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    let ticket;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (verifyErr) {
+      console.error('Google token verification failed:', verifyErr);
+      return res.status(401).json({ error: 'Invalid Google credential' });
+    }
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    // Check if user already exists
+    let user = await db.getOne(
+      'SELECT id, username, email, role FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (!user) {
+      // Auto-create user with role = patient
+      // Use email as username
+      const username = email.split('@')[0]; // e.g., "john" from "john@gmail.com"
+      const passwordHash = 'GOOGLE_OAUTH'; // Mark as Google OAuth user
+
+      try {
+        const result = await db.query(
+          'INSERT INTO users (username, email, password_hash, role, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role',
+          [username, email, passwordHash, 'patient', null]
+        );
+        user = result.rows[0];
+      } catch (insertErr) {
+        console.error('Error creating Google user:', insertErr);
+        // Handle duplicate username case
+        if (insertErr.code === 'SQLITE_CONSTRAINT' || insertErr.code === '23505') {
+          // Generate a unique username
+          const uniqueUsername = `${email.split('@')[0]}_${Date.now()}`;
+          const result = await db.query(
+            'INSERT INTO users (username, email, password_hash, role, phone_number) VALUES ($1, $2, $3, $4, $5) RETURNING id, username, email, role',
+            [uniqueUsername, email, passwordHash, 'patient', null]
+          );
+          user = result.rows[0];
+        } else {
+          throw insertErr;
+        }
+      }
+    }
+
+    // Generate JWT token
+    const token = auth.generateToken({
+      id: user.id,
+      username: user.username,
+      role: user.role,
+    });
+
+    res.json({
+      message: 'Google login successful',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+      },
+      token,
+    });
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    if (error && (error.code === 'ECONNREFUSED' || error?.errors?.some?.(e => e.code === 'ECONNREFUSED'))) {
+      return res.status(503).json({ error: 'Database unreachable' });
     }
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -231,6 +349,40 @@ router.get(
 // ============================================================================
 // CLINICIAN ENDPOINTS
 // ============================================================================
+
+/**
+ * GET /search/patient
+ * Search patients by username, email, or name for autocomplete
+ * Query: ?query=searchTerm
+ */
+router.get(
+  '/search/patient',
+  auth.authenticate,
+  auth.requireRole('clinician'),
+  async (req, res) => {
+    try {
+      const { query } = req.query;
+
+      if (!query || query.trim().length < 1) {
+        return res.json([]);
+      }
+
+      const searchTerm = `%${query.trim().toLowerCase()}%`;
+
+      const patients = await db.query(
+        `SELECT id, username, email FROM users 
+         WHERE role = $1 AND (LOWER(username) LIKE $2 OR LOWER(email) LIKE $2)
+         LIMIT 10`,
+        ['patient', searchTerm]
+      );
+
+      res.json(patients.rows || []);
+    } catch (error) {
+      console.error('Patient search error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
 
 /**
  * GET /clinician/search/:patientId
@@ -889,6 +1041,93 @@ router.put(
       });
     } catch (error) {
       console.error('Mark reminder sent error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+// ============================================================================
+// DOCTOR NOTES ENDPOINTS
+// ============================================================================
+
+/**
+ * POST /notes/add
+ * Add a doctor note (provider/clinician only)
+ */
+router.post(
+  '/notes/add',
+  auth.authenticate,
+  auth.requireRole('clinician'),
+  async (req, res) => {
+    try {
+      const { patient_username, note, appointment_date, reminder } = req.body;
+      const providerId = req.user.id;
+
+      // Validate input
+      if (!patient_username || !note) {
+        return res
+          .status(400)
+          .json({ error: 'Missing required fields: patient_username, note' });
+      }
+
+      // Find patient by username
+      const patient = await db.getOne(
+        'SELECT id, phone_number FROM users WHERE username = $1 AND role = $2',
+        [patient_username, 'patient']
+      );
+
+      if (!patient) {
+        return res.status(404).json({ error: 'Patient not found' });
+      }
+
+      // Insert doctor note
+      const result = await db.query(
+        `INSERT INTO doctor_notes (patient_user_id, provider_user_id, note, appointment_date, reminder)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING id, patient_user_id, provider_user_id, note, appointment_date, reminder, created_at`,
+        [patient.id, providerId, note, appointment_date || null, reminder ? 1 : 0]
+      );
+
+      res.status(201).json({
+        message: 'Doctor note added successfully',
+        note: result.rows[0],
+      });
+    } catch (error) {
+      console.error('Add note error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+);
+
+/**
+ * GET /notes/me
+ * Get doctor notes for authenticated patient
+ */
+router.get(
+  '/notes/me',
+  auth.authenticate,
+  auth.requireRole('patient'),
+  async (req, res) => {
+    try {
+      const patientId = req.user.id;
+
+      // Get all notes for this patient, ordered by appointment date descending
+      const notes = await db.getAll(
+        `SELECT dn.id, dn.note, dn.appointment_date, dn.reminder, dn.reminder_sent, 
+                dn.created_at, u.username as provider_name, u.email as provider_email
+         FROM doctor_notes dn
+         JOIN users u ON dn.provider_user_id = u.id
+         WHERE dn.patient_user_id = $1
+         ORDER BY dn.appointment_date DESC`,
+        [patientId]
+      );
+
+      res.json({
+        notes,
+        count: notes.length,
+      });
+    } catch (error) {
+      console.error('Get notes error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }

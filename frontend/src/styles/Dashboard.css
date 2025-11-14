@@ -729,3 +729,86 @@
     border-bottom-color: transparent;
   }
 }
+
+/* Enhanced search / autocomplete styles */
+.search-section h2 {
+  margin-bottom: 12px;
+}
+
+.selected-patient-card {
+  animation: fadeIn 240ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* make suggestions visually pleasing on mobile */
+@media (max-width: 768px) {
+  .search-section .patient-info-card {
+    padding: 16px;
+  }
+}
+
+/* Doctor Notes Styles */
+.notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.notes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.notes-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.notes-header .btn {
+  flex-shrink: 0;
+}
+
+.notes-form-container {
+  margin-bottom: 30px;
+  animation: slideDown 0.3s ease;
+}
+
+.notes-info {
+  background: #eff6ff;
+  border-left: 4px solid #667eea;
+  border-radius: 6px;
+  padding: 15px;
+  color: #1e40af;
+  font-size: 14px;
+}
+
+.notes-info p {
+  margin: 5px 0;
+}
+
+.notes-info p:first-child {
+  margin-top: 0;
+}
+
+.notes-info p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .notes-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .notes-header .btn {
+    width: 100%;
+  }
+}

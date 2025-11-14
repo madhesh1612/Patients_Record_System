@@ -38,8 +38,9 @@ api.interceptors.response.use(
 // ============================================================================
 
 export const authAPI = {
-  register: (username, email, password, role, phone_number) =>
+  register: (name, username, email, password, role, phone_number) =>
     api.post('/auth/register', {
+      name,
       username,
       email,
       password,
@@ -49,6 +50,9 @@ export const authAPI = {
 
   login: (username, password) =>
     api.post('/auth/login', { username, password }),
+
+  googleLogin: (credential) =>
+    api.post('/auth/google', { credential }),
 
   verify: () => api.post('/auth/verify'),
 };
@@ -70,6 +74,9 @@ export const patientAPI = {
 
   rejectAccessRequest: (requestId) =>
     api.put(`/patient/access-requests/${requestId}/reject`),
+
+  getDoctorNotes: () =>
+    api.get('/notes/me'),
 };
 
 // ============================================================================
@@ -118,6 +125,18 @@ export const clinicianAPI = {
 
   markReminderSent: (reminderId) =>
     api.put(`/reminders/${reminderId}/send`),
+
+  addNote: (patient_username, note, appointment_date, reminder) =>
+    api.post('/notes/add', {
+      patient_username,
+      note,
+      appointment_date,
+      reminder,
+    }),
+
+  searchPatients: (query) =>
+    // send both 'q' and 'query' so backend accepts either format
+    api.get('/search/patient', { params: { q: query, query } }),
 };
 
 // ============================================================================

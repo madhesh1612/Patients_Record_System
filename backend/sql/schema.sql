@@ -65,6 +65,19 @@ CREATE TABLE reminders (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Doctor Notes (Clinical notes and appointments)
+CREATE TABLE doctor_notes (
+  id SERIAL PRIMARY KEY,
+  patient_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  provider_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  note TEXT NOT NULL,
+  appointment_date TIMESTAMP,
+  reminder BOOLEAN DEFAULT FALSE,
+  reminder_sent BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indices for faster queries
 CREATE INDEX idx_records_patient_id ON records(patient_id);
 CREATE INDEX idx_records_clinician_id ON records(clinician_id);
@@ -77,3 +90,6 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
 CREATE INDEX idx_reminders_patient_id ON reminders(patient_id);
 CREATE INDEX idx_reminders_appointment_date ON reminders(appointment_date);
 CREATE INDEX idx_reminders_reminder_sent ON reminders(reminder_sent);
+CREATE INDEX idx_doctor_notes_patient_id ON doctor_notes(patient_user_id);
+CREATE INDEX idx_doctor_notes_provider_id ON doctor_notes(provider_user_id);
+CREATE INDEX idx_doctor_notes_appointment_date ON doctor_notes(appointment_date);

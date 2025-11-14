@@ -1,24 +1,33 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import { authAPI, authHelpers } from '../utils/api';
 import '../styles/Login.css';
+import { User, Lock } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('patient');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const navigate = useNavigate();
+
+  // Clear any stale auth state when the login page mounts
+  useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
+
+    // Remove any stale auth state before attempting login
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 
     try {
       const response = await authAPI.login(username, password);
@@ -34,169 +43,117 @@ export default function Login() {
         }
       }, 500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed');
+      console.error('Login error (frontend):', err);
+      const serverMessage = err?.response?.data?.error || err?.message;
+      setError(serverMessage || 'Login failed');
+      // Ensure no partially-stored auth data remains
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
     setError('');
     setLoading(true);
 
-    try {
-      const response = await authAPI.register(
-        username,
-        email,
-        password,
-        role,
-        phoneNumber
-      );
+    // Remove any stale auth state
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
 
+    try {
+      // Decode the credential to get user info
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log('Google user info:', decoded);
+
+      // Send credential to backend
+      const response = await authAPI.googleLogin(credentialResponse.credential);
       authHelpers.setToken(response.data.token);
       authHelpers.setUser(response.data.user);
 
-      setSuccess('Registration successful!');
+      setSuccess('Google login successful!');
       setTimeout(() => {
-        if (response.data.user.role === 'patient') {
+        // Assuming Google users default to patient role
+        const userRole = response.data.user.role || 'patient';
+        if (userRole === 'patient') {
           navigate('/patient/dashboard');
         } else {
           navigate('/clinician/dashboard');
         }
       }, 500);
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      console.error('Google login error (frontend):', err);
+      const serverMessage = err?.response?.data?.error || err?.message;
+      setError(serverMessage || 'Google login failed');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    if (isRegister) {
-      handleRegister(e);
-    } else {
-      handleLogin(e);
-    }
+  const handleGoogleLoginError = () => {
+    console.error('Google login failed');
+    setError('Google login failed. Please try again.');
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
+    <div className="login-page">
+      <div className="login-card">
         <div className="login-header">
           <h1>Patient Record Management System</h1>
-          <p className="subtitle">
-            {isRegister ? 'Create a new account' : 'Sign in to your account'}
-          </p>
+          <p className="subtitle">Sign in to your account</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          {isRegister && (
-            <>
-              <div className="form-group">
-                <label htmlFor="email">Email Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required={isRegister}
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">Phone Number (Optional)</label>
-                <input
-                  type="tel"
-                  id="phone"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-            </>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group input-with-icon">
+            <User className="input-icon" />
             <input
               type="text"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
-              placeholder="Enter username"
+              placeholder="Username"
+              className="large-input"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
+          <div className="form-group input-with-icon">
+            <Lock className="input-icon" />
             <input
               type="password"
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Enter password"
+              placeholder="Password"
+              className="large-input"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="role">I am a:</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="patient">Patient</option>
-              <option value="clinician">Clinician</option>
-            </select>
-          </div>
-
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading
-              ? 'Processing...'
-              : isRegister
-              ? 'Create Account'
-              : 'Sign In'}
+          <button type="submit" className="btn btn-primary full-width" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 
-        <div className="login-toggle">
-          <p>
-            {isRegister ? 'Already have an account?' : "Don't have an account?"}
-            <button
-              type="button"
-              onClick={() => {
-                setIsRegister(!isRegister);
-                setError('');
-                setSuccess('');
-              }}
-              className="toggle-btn"
-            >
-              {isRegister ? 'Sign In' : 'Register'}
-            </button>
-          </p>
+        <div className="register-link">
+          <Link to="/register" className="toggle-btn">Register</Link>
         </div>
-      </div>
 
-      <div className="login-info">
-        <h2>Demo Credentials</h2>
-        <div className="demo-box">
-          <h3>Patient Account:</h3>
-          <p>Username: john_patient</p>
-          <p>Password: password123</p>
+        <div className="divider"><span>or</span></div>
+
+        <div className="google-login-container">
+          <GoogleLogin onSuccess={handleGoogleLoginSuccess} onError={handleGoogleLoginError} />
         </div>
-        <div className="demo-box">
-          <h3>Clinician Account:</h3>
-          <p>Username: dr_smith</p>
-          <p>Password: password123</p>
-        </div>
+
+        <div className="login-footer">Powered by Patient Record Management System</div>
       </div>
     </div>
+
   );
 }

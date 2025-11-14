@@ -1,21 +1,27 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { clinicianAPI, authHelpers } from '../utils/api';
+import PatientSearchAutocomplete from '../components/PatientSearchAutocomplete';
+import DoctorNotesForm from '../components/DoctorNotesForm';
+import DoctorNotesDisplay from '../components/DoctorNotesDisplay';
 import '../styles/Dashboard.css';
 
 export default function ClinicianDashboard() {
   const [activeTab, setActiveTab] = useState('search');
-  const [patientId, setPatientId] = useState('');
-  const [searchResult, setSearchResult] = useState(null);
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [accessStatus, setAccessStatus] = useState('none');
   const [requestReason, setRequestReason] = useState('');
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [patientRecords, setPatientRecords] = useState([]);
+  const [doctorNotes, setDoctorNotes] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDoctorNotesForm, setShowDoctorNotesForm] = useState(false);
+  const [notesLoading, setNotesLoading] = useState(false);
   const navigate = useNavigate();
   const user = authHelpers.getUser();
 
@@ -25,24 +31,56 @@ export default function ClinicianDashboard() {
     }
   }, [activeTab]);
 
-  const handleSearchPatient = async (e) => {
-    e.preventDefault();
+  // When a patient is selected from autocomplete
+  const handleSelectPatient = async (patient) => {
+    setSelectedPatient(patient);
     setError('');
     setLoading(true);
 
     try {
-      const response = await clinicianAPI.searchPatient(patientId);
-      setSearchResult(response.data.patient);
+      // Get access status
+      const response = await clinicianAPI.searchPatient(patient.id);
       setAccessStatus(response.data.accessStatus);
+
+      // Reset forms
       setRequestReason('');
       setUploadTitle('');
       setUploadDescription('');
       setSelectedFile(null);
+      setShowDoctorNotesForm(false);
+
+      // If access is approved, load records and notes
+      if (response.data.accessStatus === 'approved') {
+        await loadPatientData(patient.id);
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Patient not found');
-      setSearchResult(null);
+      setError(err.response?.data?.error || 'Failed to load patient data');
+      setSelectedPatient(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPatientData = async (patientId) => {
+    try {
+      // This would need endpoints to get patient records
+      // For now, we'll just load doctor notes
+      await loadDoctorNotes(patientId);
+    } catch (err) {
+      console.error('Error loading patient data:', err);
+    }
+  };
+
+  const loadDoctorNotes = async (patientId) => {
+    setNotesLoading(true);
+    try {
+      // We'll fetch notes associated with this patient
+      // This requires a new endpoint or we use the existing one
+      setDoctorNotes([]);
+    } catch (err) {
+      console.error('Error loading notes:', err);
+    } finally {
+      setNotesLoading(false);
     }
   };
 
@@ -52,7 +90,7 @@ export default function ClinicianDashboard() {
     setLoading(true);
 
     try {
-      await clinicianAPI.submitAccessRequest(patientId, requestReason);
+      await clinicianAPI.submitAccessRequest(selectedPatient.id, requestReason);
       setSuccess('Access request submitted successfully!');
       setAccessStatus('pending');
       setRequestReason('');
@@ -82,7 +120,7 @@ export default function ClinicianDashboard() {
 
     try {
       await clinicianAPI.uploadRecord(
-        patientId,
+        selectedPatient.id,
         uploadTitle,
         uploadDescription,
         selectedFile
@@ -165,89 +203,98 @@ export default function ClinicianDashboard() {
         {/* Search Tab */}
         {activeTab === 'search' && (
           <section className="tab-content">
-            {/* Search Form */}
+            {/* Search Section */}
             <div className="search-section">
               <h2>Search Patient</h2>
-              <form onSubmit={handleSearchPatient} className="search-form">
-                <div className="form-group">
-                  <label htmlFor="patientId">Patient ID</label>
-                  <input
-                    type="number"
-                    id="patientId"
-                    value={patientId}
-                    onChange={(e) => setPatientId(e.target.value)}
-                    placeholder="Enter patient ID"
-                    required
-                  />
+
+              {/* If a patient is selected, show selected patient card in place of search */}
+              {selectedPatient ? (
+                <div className="patient-info-card" style={{ animation: 'fadeIn 240ms ease' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ width: 56, height: 56, borderRadius: 9999, background: '#eef2ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3730a3', fontWeight: 700 }}>
+                        {selectedPatient.username?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>{selectedPatient.name || selectedPatient.username}</div>
+                        <div style={{ color: '#6b7280', fontSize: 13 }}>{selectedPatient.email} • {selectedPatient.phone || '—'}</div>
+                        <div style={{ color: '#9ca3af', fontSize: 12, marginTop: 4 }}>ID: {selectedPatient.username} • DB ID: {selectedPatient.id}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="btn btn-danger" onClick={() => { setSelectedPatient(null); setAccessStatus('none'); }}>
+                        Change patient
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  disabled={loading}
-                >
-                  {loading ? 'Searching...' : 'Search'}
-                </button>
-              </form>
+              ) : (
+                <>
+                  <PatientSearchAutocomplete onSelectPatient={handleSelectPatient} />
+                  <p className="text-sm text-gray-600 mt-2">Search by patient ID, name, or email to get started</p>
+                </>
+              )}
             </div>
 
-            {/* Search Results */}
-            {searchResult && (
-              <div className="search-results">
-                <div className="patient-info-card">
-                  <h3>Patient Information</h3>
-                  <div className="patient-details">
-                    <p>
-                      <strong>Name:</strong> {searchResult.username}
-                    </p>
-                    <p>
-                      <strong>Email:</strong> {searchResult.email}
-                    </p>
-                    <p>
-                      <strong>Patient ID:</strong> {searchResult.id}
-                    </p>
-                  </div>
-
-                  <div className="access-status">
-                    <span
-                      className={`status-badge ${getAccessStatusBadge().class}`}
-                    >
-                      {getAccessStatusBadge().text}
-                    </span>
+            {/* Patient View - Only shown after selection (additional details) */}
+            {selectedPatient && (
+              <div className="search-results" style={{ marginTop: 20 }}>
+                <div className="patient-info-card" style={{ animation: 'slideDown 220ms ease' }}>
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3>Patient Information</h3>
+                      <div className="patient-details">
+                        <p>
+                          <strong>Name:</strong> {selectedPatient.name || selectedPatient.username}
+                        </p>
+                        <p>
+                          <strong>Username:</strong> {selectedPatient.username}
+                        </p>
+                        <p>
+                          <strong>Email:</strong> {selectedPatient.email}
+                        </p>
+                        <p>
+                          <strong>Patient ID:</strong> {selectedPatient.id}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="access-status">
+                      <span className={`status-badge ${getAccessStatusBadge().class}`}>
+                        {getAccessStatusBadge().text}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Access Request Section */}
                   {accessStatus === 'none' && (
-                    <form
-                      onSubmit={handleSubmitAccessRequest}
-                      className="access-request-form"
-                    >
-                      <h4>Request Access to Medical Records</h4>
-                      <div className="form-group">
-                        <label htmlFor="reason">Reason for Access</label>
-                        <textarea
-                          id="reason"
-                          value={requestReason}
-                          onChange={(e) => setRequestReason(e.target.value)}
-                          placeholder="Explain why you need access to this patient's records"
-                          required
-                          rows="4"
-                        ></textarea>
-                      </div>
-                      <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={loading}
-                      >
-                        {loading ? 'Submitting...' : 'Submit Request'}
-                      </button>
-                    </form>
+                    <form onSubmit={handleSubmitAccessRequest} className="access-request-form">
+              <h4>Request Access to Medical Records</h4>
+              <div className="form-group">
+                <label htmlFor="reason">Reason for Access</label>
+                <textarea
+                  id="reason"
+                  value={requestReason}
+                  onChange={(e) => setRequestReason(e.target.value)}
+                  placeholder="Explain why you need access to this patient's records"
+                  required
+                  rows="4"
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit Request'}
+              </button>
+            </form>
                   )}
 
                   {accessStatus === 'pending' && (
                     <div className="pending-message">
                       <p>
-                        ⏳ Your access request is pending patient approval.
-                        You will be able to upload records once approved.
+                        ⏳ Your access request is pending patient approval. You will be able to
+                        upload records and add doctor notes once approved.
                       </p>
                     </div>
                   )}
@@ -255,76 +302,102 @@ export default function ClinicianDashboard() {
                   {accessStatus === 'rejected' && (
                     <div className="rejected-message">
                       <p>
-                        ❌ Your access request has been rejected by the patient.
-                        You cannot upload records for this patient.
+                        ❌ Your access request has been rejected by the patient. You cannot upload
+                        records for this patient.
                       </p>
                     </div>
                   )}
 
                   {/* Upload Section */}
                   {accessStatus === 'approved' && (
-                    <form
-                      onSubmit={handleUploadRecord}
-                      className="upload-form"
-                    >
-                      <h4>Upload Medical Record</h4>
-                      <div className="form-group">
-                        <label htmlFor="title">Record Title</label>
-                        <input
-                          type="text"
-                          id="title"
-                          value={uploadTitle}
-                          onChange={(e) => setUploadTitle(e.target.value)}
-                          placeholder="e.g., Blood Work Results"
-                          required
+                    <>
+                      <form onSubmit={handleUploadRecord} className="upload-form">
+                        <h4>Upload Medical Record</h4>
+                        <div className="form-group">
+                          <label htmlFor="title">Record Title</label>
+                          <input
+                            type="text"
+                            id="title"
+                            value={uploadTitle}
+                            onChange={(e) => setUploadTitle(e.target.value)}
+                            placeholder="e.g., Blood Work Results"
+                            required
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="description">Description</label>
+                          <textarea
+                            id="description"
+                            value={uploadDescription}
+                            onChange={(e) => setUploadDescription(e.target.value)}
+                            placeholder="Additional notes about this record"
+                            rows="3"
+                          />
+                        </div>
+
+                        <div className="form-group">
+                          <label htmlFor="file">Upload File</label>
+                          <input
+                            type="file"
+                            id="file"
+                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                            required
+                          />
+                          <p className="file-help">
+                            Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max 10MB)
+                          </p>
+                        </div>
+
+                        {selectedFile && (
+                          <p className="selected-file">
+                            Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                          </p>
+                        )}
+
+                        <button
+                          type="submit"
+                          className="btn btn-success"
+                          disabled={loading}
+                        >
+                          {loading ? 'Uploading...' : '📤 Upload Record'}
+                        </button>
+                      </form>
+
+                      {/* Doctor Notes Section */}
+                      <div className="mt-8 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-lg font-bold text-gray-800">Doctor Notes</h4>
+                          <button
+                            onClick={() => setShowDoctorNotesForm(!showDoctorNotesForm)}
+                            className="btn btn-primary btn-small"
+                          >
+                            {showDoctorNotesForm ? '✕ Cancel' : '+ Add Note'}
+                          </button>
+                        </div>
+
+                        {showDoctorNotesForm && (
+                          <div className="notes-form-container">
+                            <DoctorNotesForm
+                              defaultPatientUsername={selectedPatient.username}
+                              onNoteAdded={() => {
+                                setShowDoctorNotesForm(false);
+                                setSuccess('Doctor note added successfully!');
+                                setTimeout(() => setSuccess(''), 3000);
+                              }}
+                              onCancel={() => setShowDoctorNotesForm(false)}
+                            />
+                          </div>
+                        )}
+
+                        <DoctorNotesDisplay
+                          notes={doctorNotes}
+                          loading={notesLoading}
+                          error={error}
                         />
                       </div>
-
-                      <div className="form-group">
-                        <label htmlFor="description">Description</label>
-                        <textarea
-                          id="description"
-                          value={uploadDescription}
-                          onChange={(e) =>
-                            setUploadDescription(e.target.value)
-                          }
-                          placeholder="Additional notes about this record"
-                          rows="3"
-                        ></textarea>
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="file">Upload File</label>
-                        <input
-                          type="file"
-                          id="file"
-                          onChange={(e) =>
-                            setSelectedFile(e.target.files?.[0] || null)
-                          }
-                          accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                          required
-                        />
-                        <p className="file-help">
-                          Accepted: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max
-                          10MB)
-                        </p>
-                      </div>
-
-                      {selectedFile && (
-                        <p className="selected-file">
-                          Selected: {selectedFile.name} (
-                          {(selectedFile.size / 1024).toFixed(2)} KB)
-                        </p>
-                      )}
-
-                      <button
-                        type="submit"
-                        className="btn btn-success"
-                        disabled={loading}
-                      >
-                        {loading ? 'Uploading...' : '📤 Upload Record'}
-                      </button>
-                    </form>
+                    </>
                   )}
                 </div>
               </div>

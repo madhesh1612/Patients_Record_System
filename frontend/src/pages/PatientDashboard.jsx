@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { patientAPI, authHelpers } from '../utils/api';
+import PatientNotificationBell from '../components/PatientNotificationBell';
 import '../styles/Dashboard.css';
 
 export default function PatientDashboard() {
@@ -89,9 +90,12 @@ export default function PatientDashboard() {
             <h1>Patient Dashboard</h1>
             <p>Welcome, {user?.username}!</p>
           </div>
-          <button onClick={handleLogout} className="btn btn-logout">
-            Logout
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <PatientNotificationBell />
+            <button onClick={handleLogout} className="btn btn-logout">
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
@@ -158,7 +162,6 @@ export default function PatientDashboard() {
             )}
           </section>
         )}
-
         {/* Access Requests Tab */}
         {activeTab === 'requests' && (
           <section className="tab-content">
