@@ -1,0 +1,548 @@
+/* ==========================================================================
+   Arogyam.ai Design System & Master Theme
+   ========================================================================== */
+
+:root {
+  --arogyam-bg: #faf8f5;
+  --arogyam-bg-subtle: #f4f1ea;
+  --arogyam-surface: #ffffff;
+  --arogyam-text-main: #2b302c;
+  --arogyam-text-muted: #6e766e;
+  --arogyam-text-subtle: #9ba39b;
+  
+  /* Brand Accents */
+  --arogyam-terracotta: #c06c50;
+  --arogyam-terracotta-dark: #a9533a;
+  --arogyam-terracotta-light: #fbeee9;
+  --arogyam-emerald: #1e5e4d;
+  --arogyam-emerald-light: #e6f4f0;
+  --arogyam-pill-nav: #484d49;
+  
+  /* Borders & Shadows */
+  --arogyam-border: rgba(0, 0, 0, 0.08);
+  --arogyam-border-strong: rgba(0, 0, 0, 0.14);
+  --arogyam-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --arogyam-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --arogyam-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+  --arogyam-shadow-pill: 0 12px 36px rgba(0, 0, 0, 0.18);
+  
+  /* Fonts */
+  --font-serif: 'Newsreader', 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+}
+
+/* Global Reset & Body */
+body {
+  background-color: var(--arogyam-bg);
+  color: var(--arogyam-text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Background Grid / Coordinate Mesh Pattern */
+.arogyam-page-canvas {
+  min-height: 100vh;
+  position: relative;
+  background-color: var(--arogyam-bg);
+  background-image: 
+    linear-gradient(rgba(43, 48, 44, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(43, 48, 44, 0.035) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Floating Pill Navbar */
+.arogyam-nav-wrapper {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.arogyam-pill-nav {
+  max-width: 1040px;
+  margin: 0 auto;
+  background: var(--arogyam-pill-nav);
+  backdrop-filter: blur(12px);
+  border-radius: 9999px;
+  padding: 8px 12px 8px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--arogyam-shadow-pill);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Brand */
+.arogyam-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.arogyam-brand-text {
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.arogyam-brand-dot {
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+/* Nav Links */
+.arogyam-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.arogyam-nav-link {
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.arogyam-nav-link:hover,
+.arogyam-nav-link.active {
+  color: #ffffff;
+}
+
+/* Nav Action Buttons */
+.arogyam-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.arogyam-guest-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.arogyam-login-link {
+  color: #f3f4f6;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+}
+
+.arogyam-login-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.arogyam-trial-btn {
+  background: #ffffff;
+  color: #2b302c;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.arogyam-trial-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* User Pill & Dropdown */
+.arogyam-user-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 12px 4px 6px;
+  border-radius: 9999px;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.arogyam-avatar-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--arogyam-terracotta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.arogyam-role-tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+}
+
+.arogyam-role-tag.role-patient {
+  background: #0284c7;
+  color: #ffffff;
+}
+.arogyam-role-tag.role-clinician {
+  background: #0d9488;
+  color: #ffffff;
+}
+.arogyam-role-tag.role-admin {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.arogyam-user-menu {
+  position: relative;
+}
+
+.arogyam-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 220px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: var(--arogyam-shadow-lg);
+  border: 1px solid var(--arogyam-border);
+  padding: 8px;
+  z-index: 1000;
+}
+
+.arogyam-dropdown-header {
+  padding: 10px 12px 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.arogyam-dropdown-header strong {
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.arogyam-dropdown-header small {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.arogyam-dropdown-divider {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 6px 0;
+}
+
+.arogyam-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #334155;
+  text-decoration: none;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.arogyam-dropdown-item:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.arogyam-dropdown-item.logout {
+  color: #ef4444;
+}
+.arogyam-dropdown-item.logout:hover {
+  background: #fef2f2;
+}
+
+/* Mobile Toggle & Drawer */
+.arogyam-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.arogyam-mobile-drawer {
+  background: #383d39;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: var(--arogyam-shadow-lg);
+}
+
+.arogyam-mobile-drawer a {
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Badges / Pill Announcement Chips */
+.arogyam-pill-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 40px auto 28px;
+}
+
+.arogyam-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.arogyam-badge-chip.coral {
+  background: var(--arogyam-terracotta-light);
+  color: #8c3b24;
+  border: 1px solid rgba(192, 108, 80, 0.35);
+}
+
+.arogyam-badge-chip.emerald {
+  background: var(--arogyam-emerald);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(30, 94, 77, 0.2);
+}
+
+.badge-tag-pill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 9999px;
+}
+
+.arogyam-badge-chip.coral .badge-tag-pill {
+  background: var(--arogyam-terracotta);
+  color: #ffffff;
+}
+
+.arogyam-badge-chip.emerald .badge-tag-pill {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+/* Hero Typography */
+.arogyam-hero-title {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--arogyam-text-main);
+  text-align: center;
+  max-width: 780px;
+  margin: 0 auto 20px;
+  letter-spacing: -0.02em;
+}
+
+.arogyam-hero-title em {
+  font-style: italic;
+  color: var(--arogyam-terracotta);
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.arogyam-hero-subtitle {
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto 36px;
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--arogyam-text-muted);
+}
+
+.arogyam-hero-subtitle strong {
+  color: var(--arogyam-text-main);
+  font-weight: 600;
+}
+
+/* Hero CTAs */
+.arogyam-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 50px;
+}
+
+.btn-terracotta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--arogyam-terracotta) 0%, var(--arogyam-terracotta-dark) 100%);
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.98rem;
+  font-weight: 700;
+  padding: 13px 26px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(192, 108, 80, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-terracotta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(192, 108, 80, 0.45);
+}
+
+.btn-pill-white {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ffffff;
+  color: var(--arogyam-text-main);
+  text-decoration: none;
+  font-size: 0.98rem;
+  font-weight: 600;
+  padding: 13px 24px;
+  border-radius: 9999px;
+  border: 1px solid var(--arogyam-border-strong);
+  box-shadow: var(--arogyam-shadow-sm);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn-pill-white:hover {
+  background: #fdfdfd;
+  transform: translateY(-1px);
+  box-shadow: var(--arogyam-shadow-md);
+}
+
+/* Luxury Arogyam Cards */
+.arogyam-card {
+  background: var(--arogyam-surface);
+  border: 1px solid var(--arogyam-border);
+  border-radius: 24px;
+  box-shadow: var(--arogyam-shadow-md);
+  padding: 36px 32px;
+}
+
+.arogyam-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.arogyam-card-header h1,
+.arogyam-card-header h2 {
+  font-family: var(--font-serif);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--arogyam-text-main);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.arogyam-card-header h1 em,
+.arogyam-card-header h2 em {
+  font-style: italic;
+  color: var(--arogyam-terracotta);
+}
+
+.arogyam-card-header p {
+  color: var(--arogyam-text-muted);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+/* Input Fields */
+.arogyam-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.arogyam-form-group label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--arogyam-text-main);
+}
+
+.arogyam-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.arogyam-input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--arogyam-text-subtle);
+  pointer-events: none;
+}
+
+.arogyam-input {
+  width: 100%;
+  padding: 12px 14px 12px 42px;
+  background: #ffffff;
+  border: 1px solid var(--arogyam-border-strong);
+  border-radius: 12px;
+  color: var(--arogyam-text-main);
+  font-size: 0.95rem;
+  font-family: var(--font-sans);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.arogyam-input:focus {
+  border-color: var(--arogyam-terracotta);
+  box-shadow: 0 0 0 3px rgba(192, 108, 80, 0.15);
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .arogyam-nav-links {
+    display: none;
+  }
+  .arogyam-mobile-toggle {
+    display: block;
+  }
+  .arogyam-hero-title {
+    font-size: 2.5rem;
+  }
+}

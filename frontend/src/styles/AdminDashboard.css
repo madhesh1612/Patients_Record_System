@@ -1,0 +1,134 @@
+.admin-content {
+  max-width: 1120px;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-status-tabs {
+  display: flex;
+  border-bottom: 1px solid #d9e0e6;
+  gap: 4px;
+}
+
+.admin-status-tab {
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #53616a;
+  padding: 11px 16px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.admin-status-tab.active {
+  border-bottom-color: #19766c;
+  color: #145b54;
+}
+
+.admin-refresh,
+.admin-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.admin-refresh {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #cbd5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #263840;
+  font: inherit;
+  cursor: pointer;
+}
+
+.admin-refresh:disabled,
+.admin-action:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.admin-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-clinician-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 20px;
+  border: 1px solid #e0e6e9;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.admin-clinician-details h2 {
+  margin: 0 0 7px;
+  color: #20333a;
+  font-size: 17px;
+}
+
+.admin-clinician-details p,
+.admin-clinician-details time {
+  display: block;
+  margin: 4px 0;
+  color: #56676e;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.admin-clinician-details time {
+  margin-top: 9px;
+  color: #7b898f;
+  font-size: 12px;
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-row-actions .status-badge {
+  margin-right: 4px;
+}
+
+@media (max-width: 640px) {
+  .admin-toolbar,
+  .admin-clinician-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-toolbar {
+    gap: 10px;
+  }
+
+  .admin-status-tabs {
+    justify-content: space-between;
+  }
+
+  .admin-status-tab {
+    flex: 1;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .admin-row-actions {
+    justify-content: flex-start;
+  }
+}
